@@ -30,10 +30,10 @@ class WebScraper:
     
     def get_page(self, url):
         """
-        Fetch a web page
+        Fetch a web page and return BeautifulSoup object
         
         Args:
-            url (str): URL to fetch
+            url (str): URL to scrape
             
         Returns:
             BeautifulSoup: Parsed HTML content or None if failed
@@ -43,7 +43,7 @@ class WebScraper:
             response = self.session.get(url, timeout=self.timeout)
             response.raise_for_status()
             
-            # Respect robots.txt and be polite
+            # Respect robots.txt and rate limiting
             time.sleep(self.delay)
             
             return BeautifulSoup(response.content, 'html.parser')
@@ -59,7 +59,7 @@ class WebScraper:
         Args:
             soup (BeautifulSoup): Parsed HTML
             base_url (str): Base URL for relative links
-            filter_pattern (str): Optional pattern to filter links
+            filter_pattern (str): Pattern to filter links
             
         Returns:
             list: List of absolute URLs
@@ -98,9 +98,6 @@ class WebScraper:
             elements = soup.select(selector)
             text = ' '.join([elem.get_text(strip=True) for elem in elements])
         else:
-            # Remove script and style elements
-            for script in soup(["script", "style"]):
-                script.decompose()
             text = soup.get_text(strip=True)
             
         return ' '.join(text.split())  # Clean up whitespace
