@@ -1,19 +1,16 @@
 """
 Configuration settings for the web scraper
 """
+# Request settings
+DEFAULT_DELAY = 1  # seconds between requests
+DEFAULT_TIMEOUT = 10  # request timeout in seconds
 
-# Default settings
-DEFAULT_CONFIG = {
-    "request_delay": 1,  # seconds between requests
-    "timeout": 10,       # request timeout in seconds
-    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-    "output_directory": "scraped_data",
-    "max_retries": 3
-}
+# Output settings
+OUTPUT_DIR = "output"
+DEFAULT_OUTPUT_FORMAT = "json"
 
-# Example URLs for testing
-EXAMPLE_URLS = [
-    "https://www.python.org",
-    "https://httpbin.org/html",
-    "https://httpbin.org/json"
-]
+# User agent to mimic real browser
+USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+
+# Allowed file formats
+SUPPORTED_FORMATS = ['json', 'csv', 'txt']
