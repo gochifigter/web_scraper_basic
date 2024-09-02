@@ -1,74 +1,99 @@
 ## Simple Web Scraper
 
-A Python-based web scraper for extracting and saving data from websites.
-
-### Features
-- Extract text content from web pages
-- Extract and filter links
-- Save data in JSON, CSV, and text formats
-- Configurable request delays and timeouts
-- Error handling and logging
+A Python-based web scraper that extracts and saves data from websites.
 
 ### Installation
 
-1. **Install required packages:**
-```bash
-pip install -r requirements.txt
-```
+1. Clone or download the files to your local directory
+2. Install required dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+### Files Structure
+
+- `scraper.py` - Main scraping logic with WebScraper class
+- `data_handler.py` - Data storage and export functionality
+- `main.py` - Example usage and command-line interface
+- `config.py` - Configuration settings
+- `requirements.txt` - Python dependencies
 
 ### Usage
 
-#### Method 1: Run the example
+#### Method 1: Run Example (Recommended for testing)
 ```bash
 python main.py
 ```
-This will scrape python.org and save the data in the `scraped_data` directory.
+This scrapes quotes from quotes.toscrape.com and saves them as JSON and CSV.
 
-#### Method 2: Scrape a custom URL
+#### Method 2: Custom Scraping
 ```bash
-python main.py --url "https://example.com" --output "my_data"
+# Scrape specific URL and save as JSON
+python main.py --url "https://example.com" --format json
+
+# Scrape with CSS selector
+python main.py --url "https://example.com" --selector ".article-title" --format csv
+
+# Save as text file
+python main.py --url "https://example.com" --format txt
 ```
 
-#### Method 3: Use in your own code
+#### Method 3: Use in Your Code
 ```python
 from scraper import WebScraper
 from data_handler import DataHandler
 
-# Initialize components
-scraper = WebScraper(delay=2)
+# Initialize
+scraper = WebScraper(delay=1)
 data_handler = DataHandler()
 
-# Scrape a website
+# Scrape a page
 soup = scraper.get_page("https://example.com")
-if soup:
-    text = scraper.extract_text(soup)
-    links = scraper.extract_links(soup, "https://example.com")
-    
-    # Save data
-    data_handler.save_text(text, "example.txt")
+
+# Extract specific content
+titles = soup.select("h1, h2, h3")
+data = [{"text": title.get_text(strip=True)} for title in titles]
+
+# Save results
+data_handler.save_to_json(data, "results.json")
 ```
 
-### File Structure
-- `scraper.py` - Main scraping logic with WebScraper class
-- `data_handler.py` - Data saving and file handling
-- `main.py` - Example usage and command-line interface
-- `config.py` - Configuration settings
-- `requirements.txt` - Required Python packages
+### Features
+
+- **Respectful Scraping**: Built-in delays between requests
+- **Multiple Output Formats**: JSON, CSV, and plain text
+- **CSS Selector Support**: Target specific page elements
+- **Error Handling**: Robust error handling for network issues
+- **Duplicate Removal**: Automatic removal of duplicate links
+- **Configurable**: Easy to customize delays, timeouts, and output
 
 ### Output
-Data is saved in the `scraped_data` directory (configurable) with timestamps:
-- JSON files for structured data
-- CSV files for tabular data (like links)
-- Text files for raw content
+
+All output files are saved in the `output/` directory with timestamps.
 
 ### Important Notes
-- Always respect robots.txt and website terms of service
-- Add delays between requests to avoid overloading servers
-- Some websites may block automated requests
-- Use responsibly and ethically
 
-### Legal Considerations
-- Only scrape publicly available data
-- Respect copyright and terms of service
-- Consider the website's bandwidth and resources
-- Check if an API is available before scraping
+1. **Respect robots.txt**: Always check a website's robots.txt file before scraping
+2. **Rate Limiting**: The scraper includes delays to avoid overwhelming servers
+3. **Legal Compliance**: Ensure you have permission to scrape the target website
+4. **Dynamic Content**: This scraper works with static HTML (not JavaScript-rendered content)
+
+### Example Output Formats
+
+**JSON:**
+```json
+[
+  {
+    "text": "The world as we have created it is a process of our thinking...",
+    "author": "Albert Einstein",
+    "tags": ["change", "deep-thoughts", "thinking", "world"],
+    "url": "http://quotes.toscrape.com"
+  }
+]
+```
+
+**CSV:**
+```csv
+text,author,tags,url
+"The world as we have created it...",Albert Einstein,"['change', 'deep-thoughts', 'thinking', 'world']",http://quotes.toscrape.com
+```
