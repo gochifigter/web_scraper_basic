@@ -1,6 +1,6 @@
 """
 Main web scraper module
-Handles HTTP requests and HTML parsing
+Handles HTTP requests and basic HTML parsing
 """
 import requests
 from bs4 import BeautifulSoup
@@ -43,7 +43,7 @@ class WebScraper:
             response = self.session.get(url, timeout=self.timeout)
             response.raise_for_status()
             
-            # Respect robots.txt and rate limiting
+            # Respect robots.txt and be polite
             time.sleep(self.delay)
             
             return BeautifulSoup(response.content, 'html.parser')
@@ -65,19 +65,17 @@ class WebScraper:
             list: List of absolute URLs
         """
         links = []
-        if not soup:
-            return links
-            
-        for link in soup.find_all('a', href=True):
-            href = link['href']
-            absolute_url = urljoin(base_url, href)
-            
-            # Filter links if pattern provided
-            if filter_pattern and filter_pattern not in absolute_url:
-                continue
+        if soup:
+            for link in soup.find_all('a', href=True):
+                href = link['href']
+                absolute_url = urljoin(base_url, href)
                 
-            links.append(absolute_url)
-            
+                # Filter links if pattern provided
+                if filter_pattern and filter_pattern in absolute_url:
+                    links.append(absolute_url)
+                elif not filter_pattern:
+                    links.append(absolute_url)
+        
         return list(set(links))  # Remove duplicates
     
     def extract_text(self, soup, selector=None):
@@ -93,11 +91,10 @@ class WebScraper:
         """
         if not soup:
             return ""
-            
+        
         if selector:
             elements = soup.select(selector)
-            text = ' '.join([elem.get_text(strip=True) for elem in elements])
+            texts = [elem.get_text(strip=True) for elem in elements]
+            return "\n".join(texts)
         else:
-            text = soup.get_text(strip=True)
-            
-        return ' '.join(text.split())  # Clean up whitespace
+            return soup.get_text(strip=True)
