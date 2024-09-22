@@ -1,107 +1,87 @@
 """
-Main script to run the web scraper
-Example usage and demonstration
+Main script to demonstrate web scraping functionality
 """
 from scraper import WebScraper
-from data_handler import DataHandler
-import argparse
+from data_extractor import DataExtractor
+from file_writer import FileWriter
+import json
 
-def scrape_example_website():
+def scrape_website_example():
     """
-    Example: Scrape quotes from quotes.toscrape.com
+    Example usage of the web scraper
     """
-    print("Starting web scraper example...")
+    # Initialize scraper
+    scraper = WebScraper(delay=2)  # 2 second delay between requests
     
-    # Initialize components
-    scraper = WebScraper(delay=1)
-    data_handler = DataHandler()
-    
-    base_url = "http://quotes.toscrape.com"
-    scraped_data = []
-    
-    # Scrape the first page
-    soup = scraper.get_page(base_url)
-    
-    if soup:
-        # Extract quotes
-        quotes = soup.find_all('div', class_='quote')
-        
-        for quote in quotes:
-            text_elem = quote.find('span', class_='text')
-            author_elem = quote.find('small', class_='author')
-            tags_elems = quote.find_all('a', class_='tag')
-            
-            quote_data = {
-                'text': text_elem.get_text(strip=True) if text_elem else '',
-                'author': author_elem.get_text(strip=True) if author_elem else '',
-                'tags': [tag.get_text(strip=True) for tag in tags_elems],
-                'url': base_url
-            }
-            scraped_data.append(quote_data)
-        
-        # Save results
-        json_file = data_handler.save_to_json(scraped_data, "quotes.json")
-        csv_file = data_handler.save_to_csv(scraped_data, "quotes.csv")
-        
-        print(f"Scraped {len(scraped_data)} quotes")
-        print(f"JSON output: {json_file}")
-        print(f"CSV output: {csv_file}")
-        
-        # Display first few results
-        print("\nFirst 3 quotes:")
-        for i, quote in enumerate(scraped_data[:3]):
-            print(f"{i+1}. {quote['text']} - {quote['author']}")
-
-def custom_scrape(url, selector=None, output_format='json'):
-    """
-    Custom scraping function for any website
-    
-    Args:
-        url (str): URL to scrape
-        selector (str): CSS selector for specific content
-        output_format (str): Output format ('json', 'csv', 'txt')
-    """
-    scraper = WebScraper(delay=2)
-    data_handler = DataHandler()
-    
+    # Example: Scrape a website
+    url = "https://httpbin.org/html"  # Using a test URL
     soup = scraper.get_page(url)
     
     if soup:
-        if selector:
-            # Extract specific elements
-            elements = soup.select(selector)
-            extracted_data = []
-            
-            for elem in elements:
-                extracted_data.append({
-                    'text': elem.get_text(strip=True),
-                    'html': str(elem),
-                    'url': url
-                })
-            
-            if output_format == 'json':
-                data_handler.save_to_json(extracted_data, "custom_scrape.json")
-            elif output_format == 'csv':
-                data_handler.save_to_csv(extracted_data, "custom_scrape.csv")
-                
-        else:
-            # Extract all text
-            text = scraper.extract_text(soup)
-            data_handler.save_to_txt(text, "full_page_text.txt")
+        # Extract basic information
+        text_content = scraper.extract_text(soup)
+        links = scraper.extract_links(soup, url)
+        metadata = DataExtractor.extract_metadata(soup)
+        
+        # Prepare data for saving
+        scraped_data = {
+            'url': url,
+            'metadata': metadata,
+            'links_found': len(links),
+            'sample_links': links[:5],  # First 5 links
+            'text_preview': text_content[:500] + "..." if len(text_content) > 500 else text_content
+        }
+        
+        # Save data
+        FileWriter.save_json(scraped_data, 'output/scraped_data.json')
+        FileWriter.save_text(text_content, 'output/full_text.txt')
+        
+        print("Scraping completed successfully!")
+        print(f"Found {len(links)} links")
+        print(f"Page title: {metadata.get('title', 'N/A')}")
+    
+    else:
+        print("Failed to fetch the page")
+
+def scrape_multiple_pages(urls):
+    """
+    Example of scraping multiple pages
+    
+    Args:
+        urls (list): List of URLs to scrape
+    """
+    scraper = WebScraper(delay=1)
+    all_data = []
+    
+    for url in urls:
+        print(f"Scraping: {url}")
+        soup = scraper.get_page(url)
+        
+        if soup:
+            metadata = DataExtractor.extract_metadata(soup)
+            page_data = {
+                'url': url,
+                'title': metadata.get('title', ''),
+                'description': metadata.get('description', ''),
+                'scraped_at': str(scraper.session.get(url).elapsed)
+            }
+            all_data.append(page_data)
+    
+    # Save combined data
+    if all_data:
+        FileWriter.save_csv(all_data, 'output/multiple_pages.csv')
+        print(f"Scraped data from {len(all_data)} pages")
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='Simple Web Scraper')
-    parser.add_argument('--url', help='URL to scrape')
-    parser.add_argument('--selector', help='CSS selector for specific content')
-    parser.add_argument('--format', choices=['json', 'csv', 'txt'], 
-                       default='json', help='Output format')
+    print("Simple Web Scraper Demo")
+    print("=" * 30)
     
-    args = parser.parse_args()
+    # Example 1: Single page scraping
+    scrape_website_example()
     
-    if args.url:
-        # Custom scraping
-        custom_scrape(args.url, args.selector, args.format)
-        print(f"Scraped {args.url} and saved results to output/ directory")
-    else:
-        # Run example
-        scrape_example_website()
+    # Example 2: Multiple pages (uncomment to use)
+    # urls = [
+    #     "https://httpbin.org/html",
+    #     "https://httpbin.org/json"
+    # ]
+    # scrape_multiple_pages(urls)
