@@ -1,16 +1,19 @@
 """
 Configuration settings for the web scraper
 """
-# Request settings
+
+# Default settings
 DEFAULT_DELAY = 1  # seconds between requests
 DEFAULT_TIMEOUT = 10  # request timeout in seconds
+MAX_RETRIES = 3
 
-# Output settings
-OUTPUT_DIR = "output"
-DEFAULT_OUTPUT_FORMAT = "json"
+# File output settings
+OUTPUT_DIRECTORY = "output"
+SAVE_FORMAT = "json"  # json, csv, or both
 
-# User agent to mimic real browser
-USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
-
-# Allowed file formats
-SUPPORTED_FORMATS = ['json', 'csv', 'txt']
+# User agent strings
+USER_AGENTS = [
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 Safari/605.1.15',
+    'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.107 Safari/537.36'
+]
