@@ -1,6 +1,5 @@
 """
-Main web scraper module
-Handles HTTP requests and basic HTML parsing
+Main web scraper module with core functionality
 """
 import requests
 from bs4 import BeautifulSoup
@@ -28,12 +27,12 @@ class WebScraper:
         logging.basicConfig(level=logging.INFO)
         self.logger = logging.getLogger(__name__)
     
-    def get_page(self, url):
+    def fetch_page(self, url):
         """
-        Fetch a web page and return BeautifulSoup object
+        Fetch HTML content from a URL
         
         Args:
-            url (str): URL to scrape
+            url (str): URL to fetch
             
         Returns:
             BeautifulSoup: Parsed HTML content or None if failed
@@ -43,40 +42,38 @@ class WebScraper:
             response = self.session.get(url, timeout=self.timeout)
             response.raise_for_status()
             
-            # Respect robots.txt and be polite
+            # Parse HTML with BeautifulSoup
+            soup = BeautifulSoup(response.content, 'html.parser')
+            
+            # Respect rate limiting
             time.sleep(self.delay)
             
-            return BeautifulSoup(response.content, 'html.parser')
+            return soup
             
         except requests.RequestException as e:
             self.logger.error(f"Error fetching {url}: {e}")
             return None
     
-    def extract_links(self, soup, base_url, filter_pattern=None):
+    def extract_links(self, soup, base_url, selector='a'):
         """
         Extract all links from a page
         
         Args:
             soup (BeautifulSoup): Parsed HTML
             base_url (str): Base URL for relative links
-            filter_pattern (str): Pattern to filter links
+            selector (str): CSS selector for links
             
         Returns:
             list: List of absolute URLs
         """
         links = []
         if soup:
-            for link in soup.find_all('a', href=True):
-                href = link['href']
-                absolute_url = urljoin(base_url, href)
-                
-                # Filter links if pattern provided
-                if filter_pattern and filter_pattern in absolute_url:
+            for link in soup.select(selector):
+                href = link.get('href')
+                if href:
+                    absolute_url = urljoin(base_url, href)
                     links.append(absolute_url)
-                elif not filter_pattern:
-                    links.append(absolute_url)
-        
-        return list(set(links))  # Remove duplicates
+        return links
     
     def extract_text(self, soup, selector=None):
         """
@@ -94,7 +91,41 @@ class WebScraper:
         
         if selector:
             elements = soup.select(selector)
-            texts = [elem.get_text(strip=True) for elem in elements]
+            texts = [element.get_text(strip=True) for element in elements]
             return "\n".join(texts)
         else:
             return soup.get_text(strip=True)
+    
+    def extract_metadata(self, soup):
+        """
+        Extract metadata from HTML
+        
+        Args:
+            soup (BeautifulSoup): Parsed HTML
+            
+        Returns:
+            dict: Metadata dictionary
+        """
+        metadata = {}
+        
+        if soup:
+            # Title
+            title_tag = soup.find('title')
+            if title_tag:
+                metadata['title'] = title_tag.get_text(strip=True)
+            
+            # Meta description
+            meta_desc = soup.find('meta', attrs={'name': 'description'})
+            if meta_desc:
+                metadata['description'] = meta_desc.get('content', '')
+            
+            # All meta tags
+            meta_tags = {}
+            for meta in soup.find_all('meta'):
+                name = meta.get('name') or meta.get('property')
+                content = meta.get('content')
+                if name and content:
+                    meta_tags[name] = content
+            metadata['meta_tags'] = meta_tags
+        
+        return metadata
