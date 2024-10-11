@@ -1,6 +1,5 @@
 """
 Data handling and storage module
-Handles saving extracted data to various formats
 """
 import json
 import csv
@@ -8,33 +7,28 @@ import os
 from datetime import datetime
 
 class DataHandler:
-    def __init__(self, output_dir="output"):
+    def __init__(self, output_dir='output'):
         """
         Initialize data handler
         
         Args:
-            output_dir (str): Directory to save output files
+            output_dir (str): Output directory for saved files
         """
         self.output_dir = output_dir
-        self._ensure_output_dir()
+        os.makedirs(output_dir, exist_ok=True)
     
-    def _ensure_output_dir(self):
-        """Create output directory if it doesn't exist"""
-        if not os.path.exists(self.output_dir):
-            os.makedirs(self.output_dir)
-    
-    def save_to_json(self, data, filename=None):
+    def save_json(self, data, filename=None):
         """
-        Save data to JSON file
+        Save data as JSON file
         
         Args:
-            data: Data to save (should be JSON serializable)
+            data: Data to save
             filename (str): Output filename
             
         Returns:
             str: Path to saved file
         """
-        if not filename:
+        if filename is None:
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             filename = f"scraped_data_{timestamp}.json"
         
@@ -45,12 +39,12 @@ class DataHandler:
         
         return filepath
     
-    def save_to_csv(self, data, filename=None):
+    def save_csv(self, data, filename=None):
         """
-        Save data to CSV file
+        Save data as CSV file
         
         Args:
-            data (list): List of dictionaries
+            data (list): List of dictionaries to save
             filename (str): Output filename
             
         Returns:
@@ -58,8 +52,8 @@ class DataHandler:
         """
         if not data:
             return None
-            
-        if not filename:
+        
+        if filename is None:
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             filename = f"scraped_data_{timestamp}.csv"
         
@@ -78,18 +72,18 @@ class DataHandler:
         
         return filepath
     
-    def save_to_txt(self, text, filename=None):
+    def save_text(self, text, filename=None):
         """
-        Save text to file
+        Save text data to file
         
         Args:
-            text (str): Text content to save
+            text (str): Text to save
             filename (str): Output filename
             
         Returns:
             str: Path to saved file
         """
-        if not filename:
+        if filename is None:
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             filename = f"scraped_text_{timestamp}.txt"
         
