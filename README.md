@@ -1,114 +1,92 @@
 ## Simple Web Scraper
 
-A modular Python web scraper for extracting and saving data from websites.
-
-### Features
-
-- **Modular Design**: Separate files for scraping, data extraction, and file writing
-- **Polite Scraping**: Built-in delays between requests
-- **Multiple Output Formats**: JSON, CSV, and plain text
-- **Data Extraction**: Email addresses, phone numbers, tables, and metadata
-- **Error Handling**: Robust error handling and logging
+A Python-based web scraper for extracting and saving data from websites.
 
 ### Installation
 
-1. **Install required packages**:
+1. **Install required dependencies:**
    ```bash
    pip install -r requirements.txt
    ```
 
-### Usage
+### Files Overview
 
-#### Basic Usage
+- **`scraper.py`** - Main scraper class with core functionality
+- **`data_handler.py`** - Data storage and export utilities
+- **`example_usage.py`** - Example implementations
+- **`config.py`** - Configuration settings
+- **`requirements.txt`** - Python dependencies
 
-Run the demo script:
+### Basic Usage
+
+1. **Import and initialize the scraper:**
+   ```python
+   from scraper import WebScraper
+   from data_handler import DataHandler
+   
+   scraper = WebScraper(delay=2)  # 2-second delay between requests
+   data_handler = DataHandler()
+   ```
+
+2. **Fetch and extract data:**
+   ```python
+   url = "https://example.com"
+   soup = scraper.fetch_page(url)
+   
+   if soup:
+       # Extract text content
+       text = scraper.extract_text(soup, selector='.content')
+       
+       # Extract metadata
+       metadata = scraper.extract_metadata(soup)
+       
+       # Extract links
+       links = scraper.extract_links(soup, url)
+   ```
+
+3. **Save extracted data:**
+   ```python
+   # Save as JSON
+   data_handler.save_json({'content': text, 'metadata': metadata}, 'data.json')
+   
+   # Save as CSV (for multiple items)
+   data_handler.save_csv([{'url': url, 'text': text}], 'data.csv')
+   
+   # Save as text
+   data_handler.save_text(text, 'content.txt')
+   ```
+
+### Running Examples
+
+Run the example script to see the scraper in action:
 ```bash
-python main.py
+python example_usage.py
 ```
 
-#### Custom Scraping
+### Features
 
-```python
-from scraper import WebScraper
-from data_extractor import DataExtractor
-from file_writer import FileWriter
+- **Rate Limiting**: Configurable delays between requests
+- **Error Handling**: Robust error handling for network issues
+- **Multiple Output Formats**: JSON, CSV, and text file support
+- **Metadata Extraction**: Automatically extracts page metadata
+- **Link Extraction**: Finds and normalizes all links on a page
+- **Configurable**: Easy to customize request headers, timeouts, etc.
 
-# Initialize scraper
-scraper = WebScraper(delay=2)  # 2 second delay
+### Important Notes
 
-# Scrape a page
-url = "https://example.com"
-soup = scraper.get_page(url)
+- **Respect robots.txt**: Always check website's robots.txt before scraping
+- **Rate Limiting**: Use appropriate delays to avoid overwhelming servers
+- **Legal Compliance**: Ensure you have permission to scrape target websites
+- **User Agent**: Uses a standard browser user agent by default
 
-if soup:
-    # Extract data
-    text = scraper.extract_text(soup)
-    emails = DataExtractor.extract_emails(text)
-    metadata = DataExtractor.extract_metadata(soup)
-    
-    # Save results
-    data = {
-        'url': url,
-        'emails': emails,
-        'metadata': metadata
-    }
-    FileWriter.save_json(data, 'scraped_data.json')
-```
+### Customization
 
-#### Scraping Multiple Pages
+Modify `config.py` to adjust default settings or add custom CSS selectors for specific websites.
 
-```python
-urls = [
-    "https://example.com/page1",
-    "https://example.com/page2",
-    "https://example.com/page3"
-]
+### Error Handling
 
-scraper = WebScraper(delay=1)
-all_data = []
-
-for url in urls:
-    soup = scraper.get_page(url)
-    if soup:
-        metadata = DataExtractor.extract_metadata(soup)
-        all_data.append({
-            'url': url,
-            'title': metadata.get('title', '')
-        })
-
-FileWriter.save_csv(all_data, 'multiple_pages.csv')
-```
-
-### File Structure
-
-- `scraper.py` - Main scraping functionality
-- `data_extractor.py` - Data parsing and extraction utilities
-- `file_writer.py` - File output handlers
-- `main.py` - Example usage and demo
-- `config.py` - Configuration settings
-- `requirements.txt` - Python dependencies
-
-### Output
-
-The scraper creates an `output/` directory with:
-- `scraped_data.json` - Structured data in JSON format
-- `full_text.txt` - Raw text content
-- `multiple_pages.csv` - Data from multiple pages (when used)
-
-### Best Practices
-
-1. **Respect robots.txt**: Check website's robots.txt before scraping
-2. **Use delays**: Avoid overwhelming servers with rapid requests
-3. **Handle errors**: Implement proper error handling for network issues
-4. **Check legality**: Ensure you have permission to scrape the target website
-5. **Use caching**: Consider caching responses to avoid repeated requests
-
-### Legal Notice
-
-Always ensure you have permission to scrape websites and comply with:
-- Website Terms of Service
-- robots.txt directives
-- Copyright laws
-- Data protection regulations (GDPR, CCPA, etc.)
-
-This tool is for educational purposes. Use responsibly and ethically.
+The scraper includes comprehensive error handling for:
+- Network timeouts
+- HTTP errors
+- Invalid URLs
+- Parser errors
