@@ -1,6 +1,8 @@
 """
-Main web scraper module with core functionality
+Main web scraper module
+Handles HTTP requests and basic HTML parsing
 """
+
 import requests
 from bs4 import BeautifulSoup
 import time
@@ -27,12 +29,12 @@ class WebScraper:
         logging.basicConfig(level=logging.INFO)
         self.logger = logging.getLogger(__name__)
     
-    def fetch_page(self, url):
+    def get_page(self, url):
         """
-        Fetch HTML content from a URL
+        Fetch a web page and return BeautifulSoup object
         
         Args:
-            url (str): URL to fetch
+            url (str): URL to scrape
             
         Returns:
             BeautifulSoup: Parsed HTML content or None if failed
@@ -42,38 +44,42 @@ class WebScraper:
             response = self.session.get(url, timeout=self.timeout)
             response.raise_for_status()
             
-            # Parse HTML with BeautifulSoup
-            soup = BeautifulSoup(response.content, 'html.parser')
-            
-            # Respect rate limiting
+            # Respect robots.txt and be polite
             time.sleep(self.delay)
             
-            return soup
+            return BeautifulSoup(response.content, 'html.parser')
             
         except requests.RequestException as e:
             self.logger.error(f"Error fetching {url}: {e}")
             return None
     
-    def extract_links(self, soup, base_url, selector='a'):
+    def extract_links(self, soup, base_url, filter_pattern=None):
         """
         Extract all links from a page
         
         Args:
             soup (BeautifulSoup): Parsed HTML
             base_url (str): Base URL for relative links
-            selector (str): CSS selector for links
+            filter_pattern (str): Optional pattern to filter links
             
         Returns:
             list: List of absolute URLs
         """
         links = []
-        if soup:
-            for link in soup.select(selector):
-                href = link.get('href')
-                if href:
-                    absolute_url = urljoin(base_url, href)
+        if not soup:
+            return links
+            
+        for link in soup.find_all('a', href=True):
+            href = link['href']
+            absolute_url = urljoin(base_url, href)
+            
+            if filter_pattern:
+                if filter_pattern in absolute_url:
                     links.append(absolute_url)
-        return links
+            else:
+                links.append(absolute_url)
+                
+        return list(set(links))  # Remove duplicates
     
     def extract_text(self, soup, selector=None):
         """
@@ -88,44 +94,11 @@ class WebScraper:
         """
         if not soup:
             return ""
-        
+            
         if selector:
             elements = soup.select(selector)
-            texts = [element.get_text(strip=True) for element in elements]
-            return "\n".join(texts)
+            text = ' '.join([elem.get_text(strip=True) for elem in elements])
         else:
-            return soup.get_text(strip=True)
-    
-    def extract_metadata(self, soup):
-        """
-        Extract metadata from HTML
-        
-        Args:
-            soup (BeautifulSoup): Parsed HTML
+            text = soup.get_text(strip=True)
             
-        Returns:
-            dict: Metadata dictionary
-        """
-        metadata = {}
-        
-        if soup:
-            # Title
-            title_tag = soup.find('title')
-            if title_tag:
-                metadata['title'] = title_tag.get_text(strip=True)
-            
-            # Meta description
-            meta_desc = soup.find('meta', attrs={'name': 'description'})
-            if meta_desc:
-                metadata['description'] = meta_desc.get('content', '')
-            
-            # All meta tags
-            meta_tags = {}
-            for meta in soup.find_all('meta'):
-                name = meta.get('name') or meta.get('property')
-                content = meta.get('content')
-                if name and content:
-                    meta_tags[name] = content
-            metadata['meta_tags'] = meta_tags
-        
-        return metadata
+        return ' '.join(text.split())  # Clean up whitespace
