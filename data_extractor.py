@@ -1,10 +1,80 @@
 """
-Data extraction utilities for specific data types
+Data extraction utilities for common web scraping patterns
 """
+
 from bs4 import BeautifulSoup
 import re
 
 class DataExtractor:
+    @staticmethod
+    def extract_titles(soup, title_selector='h1, h2, h3'):
+        """
+        Extract titles from HTML
+        
+        Args:
+            soup (BeautifulSoup): Parsed HTML
+            title_selector (str): CSS selector for titles
+            
+        Returns:
+            list: List of title texts
+        """
+        if not soup:
+            return []
+            
+        titles = []
+        for title in soup.select(title_selector):
+            text = title.get_text(strip=True)
+            if text:
+                titles.append(text)
+        return titles
+    
+    @staticmethod
+    def extract_paragraphs(soup, paragraph_selector='p'):
+        """
+        Extract paragraphs from HTML
+        
+        Args:
+            soup (BeautifulSoup): Parsed HTML
+            paragraph_selector (str): CSS selector for paragraphs
+            
+        Returns:
+            list: List of paragraph texts
+        """
+        if not soup:
+            return []
+            
+        paragraphs = []
+        for p in soup.select(paragraph_selector):
+            text = p.get_text(strip=True)
+            if text and len(text) > 10:  # Filter very short paragraphs
+                paragraphs.append(text)
+        return paragraphs
+    
+    @staticmethod
+    def extract_images(soup, base_url):
+        """
+        Extract image URLs from HTML
+        
+        Args:
+            soup (BeautifulSoup): Parsed HTML
+            base_url (str): Base URL for relative image paths
+            
+        Returns:
+            list: List of absolute image URLs
+        """
+        from urllib.parse import urljoin
+        
+        if not soup:
+            return []
+            
+        images = []
+        for img in soup.find_all('img', src=True):
+            src = img['src']
+            if not src.startswith(('http://', 'https://')):
+                src = urljoin(base_url, src)
+            images.append(src)
+        return images
+    
     @staticmethod
     def extract_emails(text):
         """
@@ -14,78 +84,33 @@ class DataExtractor:
             text (str): Text to search for emails
             
         Returns:
-            list: List of email addresses found
+            list: List of email addresses
         """
         email_pattern = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
         return re.findall(email_pattern, text)
     
     @staticmethod
-    def extract_phone_numbers(text):
-        """
-        Extract phone numbers from text
-        
-        Args:
-            text (str): Text to search for phone numbers
-            
-        Returns:
-            list: List of phone numbers found
-        """
-        phone_pattern = r'(\+?\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}'
-        return re.findall(phone_pattern, text)
-    
-    @staticmethod
-    def extract_tables(soup):
+    def extract_table_data(soup, table_selector='table'):
         """
         Extract data from HTML tables
         
         Args:
             soup (BeautifulSoup): Parsed HTML
+            table_selector (str): CSS selector for tables
             
         Returns:
-            list: List of tables as lists of rows
+            list: List of tables, each table is a list of rows
         """
-        tables = []
-        for table in soup.find_all('table'):
+        if not soup:
+            return []
+            
+        tables_data = []
+        for table in soup.select(table_selector):
             table_data = []
             for row in table.find_all('tr'):
                 row_data = [cell.get_text(strip=True) for cell in row.find_all(['td', 'th'])]
                 if row_data:
                     table_data.append(row_data)
             if table_data:
-                tables.append(table_data)
-        return tables
-    
-    @staticmethod
-    def extract_metadata(soup):
-        """
-        Extract meta tags information
-        
-        Args:
-            soup (BeautifulSoup): Parsed HTML
-            
-        Returns:
-            dict: Dictionary of meta tag content
-        """
-        metadata = {}
-        # Title
-        title = soup.find('title')
-        if title:
-            metadata['title'] = title.get_text(strip=True)
-        
-        # Meta description
-        meta_desc = soup.find('meta', attrs={'name': 'description'})
-        if meta_desc:
-            metadata['description'] = meta_desc.get('content', '')
-        
-        # Meta keywords
-        meta_keywords = soup.find('meta', attrs={'name': 'keywords'})
-        if meta_keywords:
-            metadata['keywords'] = meta_keywords.get('content', '')
-        
-        # Open Graph tags
-        og_tags = soup.find_all('meta', attrs={'property': re.compile(r'^og:')})
-        for tag in og_tags:
-            key = tag.get('property', '').replace('og:', '')
-            metadata[f'og_{key}'] = tag.get('content', '')
-        
-        return metadata
+                tables_data.append(table_data)
+        return tables_data
