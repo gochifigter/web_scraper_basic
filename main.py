@@ -1,10 +1,10 @@
 """
-Main script to demonstrate web scraping functionality
+Main script demonstrating web scraper usage
 """
+
 from scraper import WebScraper
 from data_extractor import DataExtractor
-from file_writer import FileWriter
-import json
+from file_handler import FileHandler
 
 def scrape_website_example():
     """
@@ -13,75 +13,91 @@ def scrape_website_example():
     # Initialize scraper
     scraper = WebScraper(delay=2)  # 2 second delay between requests
     
-    # Example: Scrape a website
+    # Example URL (replace with your target website)
     url = "https://httpbin.org/html"  # Using a test URL
+    
+    # Fetch the page
     soup = scraper.get_page(url)
     
     if soup:
-        # Extract basic information
-        text_content = scraper.extract_text(soup)
+        # Extract various types of data
+        titles = DataExtractor.extract_titles(soup)
+        paragraphs = DataExtractor.extract_paragraphs(soup)
+        images = DataExtractor.extract_images(soup, url)
+        
+        # Extract all text for email searching
+        all_text = scraper.extract_text(soup)
+        emails = DataExtractor.extract_emails(all_text)
+        
+        # Extract links
         links = scraper.extract_links(soup, url)
-        metadata = DataExtractor.extract_metadata(soup)
         
         # Prepare data for saving
         scraped_data = {
             'url': url,
-            'metadata': metadata,
-            'links_found': len(links),
-            'sample_links': links[:5],  # First 5 links
-            'text_preview': text_content[:500] + "..." if len(text_content) > 500 else text_content
+            'titles': titles,
+            'paragraphs': paragraphs,
+            'images': images,
+            'emails': emails,
+            'links': links,
+            'all_text': all_text[:500] + '...' if len(all_text) > 500 else all_text  # Preview
         }
         
         # Save data
-        FileWriter.save_json(scraped_data, 'output/scraped_data.json')
-        FileWriter.save_text(text_content, 'output/full_text.txt')
+        filename = FileHandler.generate_filename('example_scrape')
+        FileHandler.save_json(scraped_data, filename)
+        FileHandler.save_text(all_text, f"{filename}_full_text")
         
-        print("Scraping completed successfully!")
-        print(f"Found {len(links)} links")
-        print(f"Page title: {metadata.get('title', 'N/A')}")
-    
+        # Print summary
+        print(f"\nScraping Summary for {url}:")
+        print(f"Titles found: {len(titles)}")
+        print(f"Paragraphs found: {len(paragraphs)}")
+        print(f"Images found: {len(images)}")
+        print(f"Emails found: {len(emails)}")
+        print(f"Links found: {len(links)}")
+        
+        return scraped_data
     else:
         print("Failed to fetch the page")
+        return None
 
 def scrape_multiple_pages(urls):
     """
     Example of scraping multiple pages
-    
-    Args:
-        urls (list): List of URLs to scrape
     """
     scraper = WebScraper(delay=1)
     all_data = []
     
     for url in urls:
-        print(f"Scraping: {url}")
+        print(f"\nScraping: {url}")
         soup = scraper.get_page(url)
         
         if soup:
-            metadata = DataExtractor.extract_metadata(soup)
-            page_data = {
+            data = {
                 'url': url,
-                'title': metadata.get('title', ''),
-                'description': metadata.get('description', ''),
-                'scraped_at': str(scraper.session.get(url).elapsed)
+                'titles': DataExtractor.extract_titles(soup),
+                'text_preview': scraper.extract_text(soup)[:200] + '...'
             }
-            all_data.append(page_data)
+            all_data.append(data)
     
     # Save combined data
     if all_data:
-        FileWriter.save_csv(all_data, 'output/multiple_pages.csv')
-        print(f"Scraped data from {len(all_data)} pages")
+        FileHandler.save_json(all_data, 'multiple_pages_scrape')
+        FileHandler.save_csv(all_data, 'multiple_pages_scrape')
+    
+    return all_data
 
 if __name__ == "__main__":
-    print("Simple Web Scraper Demo")
-    print("=" * 30)
+    print("Starting web scraper example...")
     
     # Example 1: Single page scraping
-    scrape_website_example()
+    data = scrape_website_example()
     
-    # Example 2: Multiple pages (uncomment to use)
+    # Example 2: Multiple pages scraping (uncomment to use)
     # urls = [
     #     "https://httpbin.org/html",
-    #     "https://httpbin.org/json"
+    #     "https://httpbin.org/xml"
     # ]
-    # scrape_multiple_pages(urls)
+    # multiple_data = scrape_multiple_pages(urls)
+    
+    print("\nWeb scraping completed!")
