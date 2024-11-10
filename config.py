@@ -3,21 +3,17 @@ Configuration settings for the web scraper
 """
 
 # Default settings
-DEFAULT_CONFIG = {
-    'request_delay': 1,  # seconds between requests
-    'timeout': 10,       # request timeout in seconds
-    'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-    'output_directory': 'output',
-    'max_retries': 3,
-    'retry_delay': 5,
-}
+DEFAULT_DELAY = 1  # seconds between requests
+DEFAULT_TIMEOUT = 10  # request timeout in seconds
+MAX_RETRIES = 3
 
-# Common CSS selectors for different types of content
-SELECTORS = {
-    'articles': 'article, .article, .post, .content',
-    'headings': 'h1, h2, h3, h4, h5, h6',
-    'paragraphs': 'p',
-    'links': 'a',
-    'images': 'img',
-    'lists': 'ul, ol',
-}
+# Output settings
+OUTPUT_DIRECTORY = 'output'
+LOG_LEVEL = 'INFO'
+
+# User agent strings (rotate if needed)
+USER_AGENTS = [
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+    'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+]
