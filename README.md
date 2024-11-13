@@ -1,92 +1,74 @@
 ## Simple Web Scraper
 
-A Python-based web scraper for extracting and saving data from websites.
+A modular Python web scraper for extracting and saving data from websites.
+
+### Features
+- HTTP requests with proper headers and delays
+- HTML parsing with BeautifulSoup
+- Data extraction (titles, paragraphs, images, emails, tables)
+- Multiple output formats (JSON, CSV, TXT)
+- Configurable delays and timeouts
+- Error handling and logging
 
 ### Installation
 
-1. **Install required dependencies:**
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-### Files Overview
-
-- **`scraper.py`** - Main scraper class with core functionality
-- **`data_handler.py`** - Data storage and export utilities
-- **`example_usage.py`** - Example implementations
-- **`config.py`** - Configuration settings
-- **`requirements.txt`** - Python dependencies
-
-### Basic Usage
-
-1. **Import and initialize the scraper:**
-   ```python
-   from scraper import WebScraper
-   from data_handler import DataHandler
-   
-   scraper = WebScraper(delay=2)  # 2-second delay between requests
-   data_handler = DataHandler()
-   ```
-
-2. **Fetch and extract data:**
-   ```python
-   url = "https://example.com"
-   soup = scraper.fetch_page(url)
-   
-   if soup:
-       # Extract text content
-       text = scraper.extract_text(soup, selector='.content')
-       
-       # Extract metadata
-       metadata = scraper.extract_metadata(soup)
-       
-       # Extract links
-       links = scraper.extract_links(soup, url)
-   ```
-
-3. **Save extracted data:**
-   ```python
-   # Save as JSON
-   data_handler.save_json({'content': text, 'metadata': metadata}, 'data.json')
-   
-   # Save as CSV (for multiple items)
-   data_handler.save_csv([{'url': url, 'text': text}], 'data.csv')
-   
-   # Save as text
-   data_handler.save_text(text, 'content.txt')
-   ```
-
-### Running Examples
-
-Run the example script to see the scraper in action:
+1. **Install required packages:**
 ```bash
-python example_usage.py
+pip install -r requirements.txt
 ```
 
-### Features
+### Usage
 
-- **Rate Limiting**: Configurable delays between requests
-- **Error Handling**: Robust error handling for network issues
-- **Multiple Output Formats**: JSON, CSV, and text file support
-- **Metadata Extraction**: Automatically extracts page metadata
-- **Link Extraction**: Finds and normalizes all links on a page
-- **Configurable**: Easy to customize request headers, timeouts, etc.
+1. **Basic single page scraping:**
+```python
+from scraper import WebScraper
+from data_extractor import DataExtractor
+
+scraper = WebScraper(delay=2)  # 2 second delay
+soup = scraper.get_page("https://example.com")
+
+if soup:
+    titles = DataExtractor.extract_titles(soup)
+    paragraphs = DataExtractor.extract_paragraphs(soup)
+    print(f"Found {len(titles)} titles and {len(paragraphs)} paragraphs")
+```
+
+2. **Run the example:**
+```bash
+python main.py
+```
+
+3. **Customize for your needs:**
+   - Modify `main.py` to target specific websites
+   - Adjust selectors in `data_extractor.py`
+   - Change output formats in `file_handler.py`
+
+### File Structure
+- `scraper.py` - Main scraping functionality
+- `data_extractor.py` - Data extraction utilities
+- `file_handler.py` - File saving utilities
+- `main.py` - Example usage and demonstration
+- `config.py` - Configuration settings
+- `requirements.txt` - Required packages
 
 ### Important Notes
 
-- **Respect robots.txt**: Always check website's robots.txt before scraping
-- **Rate Limiting**: Use appropriate delays to avoid overwhelming servers
-- **Legal Compliance**: Ensure you have permission to scrape target websites
-- **User Agent**: Uses a standard browser user agent by default
+1. **Respect robots.txt** and website terms of service
+2. **Use appropriate delays** to avoid overloading servers
+3. **Check legality** of scraping target websites
+4. **Handle errors gracefully** - websites may block scrapers
+5. **Rotate user agents** if doing large-scale scraping
+
+### Output
+Scraped data is saved in the `output/` directory with timestamps:
+- JSON files for structured data
+- CSV files for tabular data
+- TXT files for raw text
 
 ### Customization
+- Modify CSS selectors in `DataExtractor` methods
+- Add new extraction methods as needed
+- Adjust delays and timeouts in `WebScraper` initialization
+- Extend file formats in `FileHandler`
 
-Modify `config.py` to adjust default settings or add custom CSS selectors for specific websites.
-
-### Error Handling
-
-The scraper includes comprehensive error handling for:
-- Network timeouts
-- HTTP errors
-- Invalid URLs
-- Parser errors
+This scraper provides a solid foundation that you can extend for specific website structures and data requirements.
